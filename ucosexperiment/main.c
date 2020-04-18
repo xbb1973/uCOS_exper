@@ -62,10 +62,13 @@ int main(int argc, char **argv)
     printf("7.第七个例子，消息邮箱\n");
     printf("8.第八个例子，消息队列\n");
     printf("9.第九个例子，内存管理\n"); 
+    printf("10.第10个例子，131-7\n"); 
+    printf("11.第11个例子，131-8\n"); 
+    printf("12.第12个例子，131-9\n"); 
 	
     printf("请输入序号选择例子:\n");
 	scanf("%d",&Experiment);
-    if ((Experiment<0)||(Experiment>10))
+    if ((Experiment<0)||(Experiment>100))
 	{
 		printf("无效的输入!");
         return(1); 	
@@ -78,18 +81,33 @@ int main(int argc, char **argv)
 			OSTaskCreate(FirstTask, 0, &TaskStk[5][TASK_STK_SIZE-1], 5);
 			break;
 		case 2://两个任务共享CPU
-			OSTaskCreate(E2_task1, 0, &TaskStk[5][TASK_STK_SIZE-1], 5);
-			OSTaskCreate(E2_task2, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);
+			OSTaskCreate(E2_task1, 0, &TaskStk[5][TASK_STK_SIZE-1], 6);
+			OSTaskCreate(E2_task2, 0, &TaskStk[6][TASK_STK_SIZE-1], 5);
             break;
 		case 3://任务的挂起和恢复
-			OSTaskCreate(E3_task0, 0, &TaskStk[5][TASK_STK_SIZE-1], 5);
+			OSTaskCreate(E3_task0, 0, &TaskStk[5][TASK_STK_SIZE-1], 7);
 			OSTaskCreate(E3_task1, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);
-			OSTaskCreate(E3_task2, 0, &TaskStk[7][TASK_STK_SIZE-1], 7);
+			OSTaskCreate(E3_task2, 0, &TaskStk[7][TASK_STK_SIZE-1], 5);
             break;
 		case 4://信号量管理例程
 			OSTaskCreate(UserTaskSemA, 0, &TaskStk[5][TASK_STK_SIZE-1], 7);
 			OSTaskCreate(UserTaskSemB, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);
 			OSTaskCreate(UserTaskSemC, 0, &TaskStk[7][TASK_STK_SIZE-1], 5);
+            break;
+		case 10:
+			OSTaskCreate(hyl6A, 0, &TaskStk[5][TASK_STK_SIZE-1], 5);
+			OSTaskCreate(hyl6B, 0, &TaskStk[6][TASK_STK_SIZE-1], 7);
+			OSTaskCreate(hyl6C, 0, &TaskStk[8][TASK_STK_SIZE-1], 8);
+			OSTaskCreate(hyl6D, 0, &TaskStk[7][TASK_STK_SIZE-1], 6);
+            break;
+		case 11:
+			OSTaskCreate(hylProcess, 0, &TaskStk[5][TASK_STK_SIZE-1],5);
+			OSTaskCreate(hylsubProcess1, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);
+			OSTaskCreate(hylsubProcess2, 0, &TaskStk[7][TASK_STK_SIZE-1], 7);
+            break;
+		case 12:
+			OSTaskCreate(TaskMA, 0, &TaskStk[5][TASK_STK_SIZE-1],5);
+			OSTaskCreate(TaskMB, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);
             break;
 		case 5://互斥信号量管理例程
 			OSTaskCreate(TaskMutex1, 0, &TaskStk[6][TASK_STK_SIZE-1], 6);

@@ -19,16 +19,18 @@ char * buffer;
 /*实验使用的代码1*/
 int FirstTask(void *pParam)
 {
-    int i,j=0;
-	OSTimeDly(100);//不影响统计任务初始化时获取最大的空闲计数值
+    int i=0,j=0;
+	//OSTimeDly(100);//不影响统计任务初始化时获取最大的空闲计数值
 		printf("welcome to embeded system\n");
 		printf("welcome to ucos\n");
 		printf("This is a simple task for experiment 1!\n");
 
 	for(;;)
 	{
-        for(i=0;i<99999999;i++);
-		printf("任务延时，j=%d\n",j++);
+        //for(i=0;i<99999999;i++);
+		OSTimeDly(100);
+		//printf("任务延时，j=%d\n",j++);
+		printf("任务wait，j=%d\n",j++);
 	}
 	return(0); 
 }
@@ -96,7 +98,7 @@ void E3_task2(void *pParam)
 	for(;;)
 	{
 		printf("任务2输出%d\n",i++);
-		OSTimeDly(30);
+		OSTimeDly(40);
 	}
 }
 /*end 实验使用的代码3*/
@@ -290,6 +292,265 @@ void UserTaskSemC(void *pParam)
         OSTimeDly(1000);
 	}
 }
+
+
+
+//131-8
+
+//事件标志组的例子
+INT8U IO[4][10];
+OS_FLAG_GRP  * pFlagGroupDataProcess;
+void hylProcess(void *pParam)
+{
+      INT8U     *perr;
+	  INT8U err,i;   
+      INT16U SUM;
+      OS_FLAGS processflag,retflag;
+      err=OS_ERR_NONE;	  
+      perr=&err;
+	  processflag=0x03;
+	  /*创建事件标志组,事件标志初始值0，没有事件发生*/
+      pFlagGroupDataProcess=OSFlagCreate(0,perr); 
+      /*省略了检查是否创建成功*/
+	  while(1)
+	  {
+		  printf("时间:%d，任务hylProcess开始请求事件标志-----------！\n",OSTimeGet());
+		  retflag=OSFlagPend (pFlagGroupDataProcess,
+                      processflag,
+                      OS_FLAG_WAIT_SET_ALL+OS_FLAG_CONSUME,
+                      0,
+                      perr);  
+		  
+		  if (retflag==processflag)
+		  {
+				SUM=0;
+			    printf("时间:%d，任务hylProcess请求事件标志成功，开始吃饭！\n",OSTimeGet());
+                for (i=0;i<10;i++)
+				{
+					SUM+=i;
+				}
+                printf("时间:%d，任务hylProcess吃完饭，吃了%d口饭，继续睡觉:\n",OSTimeGet(),SUM);
+		  }	  
+	  }
+}
+void hylsubProcess1(void *pParam)
+{
+      INT8U     *perr;
+	  INT8U err,i;   
+	  
+	  OS_FLAGS rdyflag;
+	  //OS_FLAG_GRP  * pFlagGroup;
+	  err=OS_ERR_NONE;
+	  perr=&err;	
+	  rdyflag=0;
+
+	  while(1)
+	  {
+		  OSTimeDly(100);/*延时1秒*/ 
+          for (i=0;i<10;i++) /*模拟获取数据的过程*/
+		  {
+			  
+		  }
+          printf("时间:%d，任务hylsubProcess1，闹钟响了！！，准备提交事件，当前事件标志位:%d\n",OSTimeGet(),rdyflag);
+		  rdyflag=OSFlagPost (pFlagGroupDataProcess,
+                      0x01,
+                      OS_FLAG_SET,
+                     perr);            /*提交事件标志，置位事件标志组中最后一位位0*/
+		  printf("时间:%d，任务hylsubProcess1，起床了！！，提交事件，当前事件标志位:%d\n",OSTimeGet(),rdyflag);
+	  }
+}
+void hylsubProcess2(void *pParam)
+{
+      INT8U     *perr;
+	  INT8U err,i;   
+ 	  OS_FLAGS rdyflag;
+	  perr=&err;
+	  err=OS_ERR_NONE;
+	  rdyflag=0;
+	  while(1)
+	  {
+		  OSTimeDly(100);/*延时1秒*/ 
+          for (i=0;i<10;i++) /*模拟获取数据的过程*/
+		  {
+				IO[1][i]=2;
+		  }
+          printf("时间:%d，任务hylsubProcess2，穿好了衣服！！，准备提交事件，当前事件标志位:%d\n",OSTimeGet(),rdyflag);
+		  rdyflag=OSFlagPost (pFlagGroupDataProcess,
+                      0x02,
+                      OS_FLAG_SET,
+                     perr);            /*提交事件标志，置位事件标志组中位1*/
+		  printf("时间:%d，任务hylsubProcess2，拿起了筷子！！，提交事件，当前事件标志位:%d\n",OSTimeGet(),rdyflag);
+	  }
+}
+
+//131-6
+
+//end of 131-6
+
+
+//131-7
+//131-7
+//131-7
+/*Mutex例子程序，使用优先级反转*/
+OS_EVENT  *myMutex;
+void hyl6A(void *pParam)
+{
+      INT8U     *perr;
+	  INT8U err,i;  
+	  INT32U j;
+	  perr=&err;
+	  err=OS_ERR_NONE;
+
+	  //myMutex=OSSemCreate(1);
+       myMutex=OSMutexCreate(3,perr);/*创建互斥信号量，优先级继承优先级PIP为9*/
+	  if (myMutex==(OS_EVENT  *)0)   /*检查是否创建成功*/
+	  {
+			printf("时间:%d，高优先级任务A创建互斥信号量失败,失败号%d:\n",OSTimeGet(),*perr);
+		    OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
+			return;
+	  }
+      printf("时间:%d，高优先级任务A创建互斥信号量成功.\n",OSTimeGet());
+      OSTimeDly(100);/*延时1秒*/ 
+      printf("时间:%d，高优先级任务A请求互斥信号量.\n",OSTimeGet());
+      //OSSemPend(myMutex,0,perr);/*等待互斥信号量*/
+      OSMutexPend(myMutex,0,perr);/*等待互斥信号量*/
+	  printf("时间:%d，高优先级任务A获得互斥信号量.\n",OSTimeGet());
+	  if (*perr == OS_ERR_NONE)
+	  {
+		  
+		  for(i=1;i<=5;i++)
+		  {
+			  printf("时间%d:高优先级任务A向串口输出数据%d\n",OSTimeGet(),i);  /*模拟操作IO*/	 
+			  for (j=1;j<=9999999;j++);	 /*模拟操作串口*/  			  
+		  }
+	  }
+	  else
+	  {
+		  printf("时间:%d，高优先级任务A请求信号量失败,失败号%d:\n",OSTimeGet(),*perr);		
+	  }
+	  //OSSemPost(myMutex);
+	OSMutexPost(myMutex);
+	  for(i=1;i<=5;i++)
+	  {
+		  
+		  printf("时间%d:高优先级任务A执行提交信号量后执行其他操作%d\n",OSTimeGet(),i);	/*模拟操作IO*/	   
+		  for (j=1;j<=99999999;j++);	 /*延时,表示在操作串口*/	
+	  }
+	  printf("高优先级任务A结束运行，删除自己\n",OSTimeGet(),*perr);	
+	  OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+	  return;
+
+}
+void hyl6B(void *pParam)
+{
+	  INT8U 	*perr;
+	  INT8U err,i;	 
+	  INT32U j;
+	  perr=&err;
+	  err=OS_ERR_NONE;
+	  if (myMutex==(OS_EVENT  *)0)	 /*检查是否有被创建的互斥信号量*/
+	  {
+			printf("时间:%d，互斥信号量未创建");
+			OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+			return;
+	  }
+	  OSTimeDly(90);/*延时不到1秒*/ 
+	  printf("时间:%d，低优先级任务B请求互斥信号量\n",OSTimeGet());
+	  //OSSemPend(myMutex,0,perr);/*等待互斥信号量*/
+		OSMutexPend(myMutex,0,perr);/*等待互斥信号量*/
+	  printf("时间:%d，任务B获得互斥信号量\n",OSTimeGet());
+	  if (*perr == OS_ERR_NONE)
+	  {
+		  printf("时间:%d，低优先级任务B获得互斥信号量\n",OSTimeGet());
+		  for(i=1;i<=5;i++)
+		  {
+			  
+			  printf("时间%d:低优先级B向串口输出数据%d\n",OSTimeGet(),i);  /*模拟操作IO*/     
+			  for (j=1;j<=99999999;j++);   /*模拟操作串口*/    
+		  }
+	  }
+	  else
+	  {
+		  printf("时间:%d，低优先级任务B请求信号量失败,失败号:\n",OSTimeGet(),*perr);     
+	  }
+	  //OSSemPost(myMutex);
+		OSMutexPost(myMutex);
+	  for(i=1;i<=5;i++)
+	  {		  
+		  printf("时间%d:低优先级B执行提交信号量后执行其他操作%d\n",OSTimeGet(),i);  /*模拟操作IO*/     
+		  for (j=1;j<=99999999;j++);   /*延时,表示在操作串口*/    
+	  }
+	  printf("低优先级任务B结束运行，删除自己\n",OSTimeGet(),*perr);   
+	  OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+	  return;
+}
+
+void hyl6C(void *pParam)
+{
+	  INT8U 	*perr;
+	  INT8U err,i;	 
+	  INT32U j;
+	  perr=&err;
+	  err=OS_ERR_NONE;
+	  if (myMutex==(OS_EVENT  *)0)	 /*检查是否有被创建的互斥信号量*/
+	  {
+			printf("时间:%d，互斥信号量未创建");
+			OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+			return;
+	  }
+	  OSTimeDly(90);/*延时不到1秒*/ 
+	  printf("时间:%d，低优先级任务C请求互斥信号量\n",OSTimeGet());
+	  //OSSemPend(myMutex,0,perr);/*等待互斥信号量*/
+		OSMutexPend(myMutex,0,perr);/*等待互斥信号量*/
+	  printf("时间:%d，任务C获得互斥信号量\n",OSTimeGet());
+	  if (*perr == OS_ERR_NONE)
+	  {
+		  printf("时间:%d，低优先级任务B获得互斥信号量\n",OSTimeGet());
+		  for(i=1;i<=5;i++)
+		  {
+			  
+			  printf("时间%d:低优先级B向串口输出数据%d\n",OSTimeGet(),i);  /*模拟操作IO*/     
+			  for (j=1;j<=99999999;j++);   /*模拟操作串口*/    
+		  }
+	  }
+	  else
+	  {
+		  printf("时间:%d，低优先级任务B请求信号量失败,失败号:\n",OSTimeGet(),*perr);     
+	  }
+	  //OSSemPost(myMutex);
+		OSMutexPost(myMutex);
+	  for(i=1;i<=5;i++)
+	  {		  
+		  printf("时间%d:低优先级B执行提交信号量后执行其他操作%d\n",OSTimeGet(),i);  /*模拟操作IO*/     
+		  for (j=1;j<=99999999;j++);   /*延时,表示在操作串口*/    
+	  }
+	  printf("低优先级任务B结束运行，删除自己\n",OSTimeGet(),*perr);   
+	  OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+	  return;
+}
+
+void hyl6D(void *pParam)
+{
+          INT8U     *perr;
+	  INT8U err,i;   
+	  INT32U j;
+	  perr=&err;
+	  err=OS_ERR_NONE;
+      i=0;
+      OSTimeDly(95);
+	  for(i=1;i<=5;i++)
+	  {
+		  printf("时间%d:中优先级任务D在运行中，打印数据%d\n",OSTimeGet(),i++);  /*模拟操作IO*/     
+		  for (j=1;j<=99999999;j++);   /*模拟进行打印操作*/  	
+	  }
+	  printf("中优先级任务D结束运行，删除自己\n");
+	  OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
+}
+
+
+
+
+
 
 //事件标志组的例子
 INT8U IO[4][10];
@@ -530,6 +791,7 @@ void TaskPrint(void *pParam)
 	  printf("中优先级任务TaskPrint结束运行，删除自己\n");
 	  OSTaskDel(OS_PRIO_SELF); /*删除本任务*/
 }
+
 //消息邮箱的例子
 OS_EVENT  *myMBox;
 void TaskMessageSen(void *pParam)
@@ -537,6 +799,7 @@ void TaskMessageSen(void *pParam)
       INT8U     *perr;
 	  INT8U err;//,i;  
 	  //INT32U j;
+	  INT32U data=0;
 	  INT32U scount;
 	  	  int a[3];
 	  perr=&err;
@@ -546,7 +809,7 @@ void TaskMessageSen(void *pParam)
 
 	  a[1]=5;
 	  a[3]=6;
-      myMBox=OSMboxCreate(&scount);/*创建邮箱，*/
+      myMBox=OSMboxCreate(&data);/*创建邮箱，*/
 	  if (myMBox==(OS_EVENT  *)0)   /*检查是否创建成功*/
 	  {
 			printf("时间:%d， TaskMessageSen创建邮箱失败\n",OSTimeGet());
@@ -554,12 +817,18 @@ void TaskMessageSen(void *pParam)
 			return;
 	  }
 	  printf("时间:%d， TaskMessageSen创建邮箱成功\n",OSTimeGet());
+
 	  while(1)
 	  {
-		  OSTimeDly(100);/*延时1秒*/ 
+		  OSTimeDly(400);/*延时1秒*/ 
+		  printf("请输入你要传输的数据");
+		  scanf("%d",&data);
+		//   OSTimeDly(1000);/*延时1秒*/ 
 		  scount++;
-          printf("时间:%d，任务TTaskMessageSen准备发消息，消息为%d\n",OSTimeGet(),scount);
-		  OSMboxPost(myMBox,&scount); /*发消息*/
+        //   printf("时间:%d，任务TTaskMessageSen准备发消息，消息为%d\n",OSTimeGet(),scount);
+		//   OSMboxPost(myMBox,&scount); /*发消息*/
+          printf("时间:%d，任务TTaskMessageSen准备发消息，消息为%d\n",OSTimeGet(),data);
+		  OSMboxPost(myMBox,&data); /*发消息*/
 	  }
 }
 void TaskMessageRec(void *pParam)
@@ -579,13 +848,16 @@ void TaskMessageRec(void *pParam)
 	  
 	  while(1)
 	  { 
+		  OSTimeDly(2000);/*延时1秒*/ 
           prcount=(INT32U * )OSMboxPend(myMBox,0,perr); /*请求消息，如果消息不存在就阻塞*/
 		  if (*perr==OS_ERR_NONE)
 			printf("时间:%d，任务TaskMessageRec接收消息为%d\n",OSTimeGet(),*prcount);
 		  else
             printf("时间:%d，任务TaskMessageRec等待异常结束，错误号:%d\n",*perr);
+		  
 	  }
 }
+
 
 //消息队列的例子
 OS_EVENT  *myQ;
@@ -600,6 +872,7 @@ void TaskQSen(void *pParam)
 	  perr=&err;
 	  err=OS_ERR_NONE;    
       scount=0;
+	  i=0;
 
       myQ=OSQCreate(myq,6);/*创建消息队列，容积为6*/
 	  if (myQ==(OS_EVENT  *)0)   /*检查是否创建成功*/
@@ -609,13 +882,16 @@ void TaskQSen(void *pParam)
 			return;
 	  }
 	  printf("时间:%d， TaskQSen创建消息队列成功\n",OSTimeGet());
-      for (i=0;i<=254;i++)
-		 mymessage[i]=i;
-      mymessage[255]=i;
+    //   for (i=0;i<=254;i++)
+	// 	 mymessage[i]=i;
+    //   mymessage[255]=i;
 	  while(1)
 	  {
-		  OSTimeDly(100);/*延时1秒*/ 
+		  OSTimeDly(250);/*延时1秒*/ 
 		  
+		  printf("请输入一个数:\n");
+		  scanf("%d", &mymessage[scount]);
+
           printf("时间:%d，任务TTaskQSen准备发消息，消息为%d\n",OSTimeGet(),mymessage[scount]);
 		  err=OSQPost(myQ,&mymessage[scount]); /*发消息*/
 		  switch (err) {
@@ -653,10 +929,11 @@ void TaskQRec(void *pParam)
 		    OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
 			return;
 	  }
+	  printf("时间:%d，任务TaskQRec每隔20秒接收消息队列并输出消息\n",OSTimeGet());
 	  while(1)
 	  {
-		  OSTimeDly(200);/*延时1秒*/ 
-          printf("时间:%d，任务TaskQRec开始等待消息\n",OSTimeGet());
+		  OSTimeDly(2000);/*延时1秒*/ 
+        //   printf("时间:%d，任务TaskQRec开始等待消息\n",OSTimeGet());
 		  rec=(unsigned char)*(INT32U *)OSQPend(myQ,0,perr); /*发消息*/
 		  switch (err) {
                 case OS_ERR_NONE:
@@ -669,6 +946,10 @@ void TaskQRec(void *pParam)
 		  printf("时间:%d，当前队列中消息数量：%d\n",OSTimeGet(),myQData.OSNMsgs);
 	  }
 }
+
+
+
+
 
 //内存管理的例子
 
@@ -741,4 +1022,248 @@ void TaskM(void *pParam)
 		  printf("时间:%d，当前分区中的已用内存块数量：%d\n",OSTimeGet(),mem_data.OSNUsed);
 		  printf("时间:%d，当前分区中的空闲内存块数量：%d\n",OSTimeGet(),mem_data.OSNFree);
 	  }
+}
+
+
+//内存管理的例子
+OS_MEM *pmyMem; //MCB块地址
+INT8U data;
+void TaskMA(void *pParam)
+{
+
+	INT8U *perr;
+	INT8U err, i;
+	INT8U *prcount;
+	INT8U readData;
+	INT8U myMem[2][20]; //用来做内存分区
+	void *pblk[10];		//内存块地址数组
+	BOOLEAN require;
+	OS_MEM_DATA mem_data; //用于查询内存块信息
+	err = OS_ERR_NONE;
+	perr = &err;
+	require = 1;
+	pmyMem = OSMemCreate(myMem, 2, 20, perr); /*创建内存分区，10个块, 每个块20个字节*/
+	if (pmyMem == (OS_MEM *)0)				  /*检查是否创建成功*/
+	{
+		printf("时间:%d， TaskMA创建内存分区失败\n", OSTimeGet());
+		OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
+		return;
+	}
+	printf("时间:%d， TaskMA创建内存分区成功，包含2个块, 每个块1个字节\n", OSTimeGet());
+	OSTimeDly(100); /*延时1秒*/
+	OSMemQuery(pmyMem, &mem_data);
+	printf("时间:%d，当前分区中的已用内存块数量：%d\n", OSTimeGet(), mem_data.OSNUsed);
+	printf("时间:%d，当前分区中的空闲内存块数量：%d\n", OSTimeGet(), mem_data.OSNFree);
+
+	data = 1;
+
+	OSTimeDly(100);				  /*延时1秒*/
+	myMBox = OSMboxCreate(&data); /*创建邮箱，*/
+	if (myMBox == (OS_EVENT *)0)  /*检查是否创建成功*/
+	{
+		printf("时间:%d， TaskMA创建邮箱失败\n", OSTimeGet());
+		OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
+		return;
+	}
+	printf("时间:%d， TaskMA创建邮箱成功\n", OSTimeGet());
+	printf("时间:%d，任务TaskMA准备发消息，消息为%d\n", OSTimeGet(), data);
+	OSTimeDly(100);			   /*延时1秒*/
+	OSMboxPost(myMBox, &data); /*发消息*/
+
+	while (1)
+	{
+		OSTimeDly(200);
+		printf("TaskMA 循环中，等待后续处理 \n");
+
+		if (myMBox == (OS_EVENT *)0) /*检查邮箱是否存在*/
+		{
+			printf("时间:%d，任务TaskMA判定邮箱不存在!\n", OSTimeGet());
+			OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
+			return;
+		}
+
+		prcount = (INT8U *)OSMboxPend(myMBox, 0, perr); /*请求消息，如果消息不存在就阻塞*/
+		if (*perr == OS_ERR_NONE)
+			printf("时间:%d，任务TaskMA接收消息为%d\n", OSTimeGet(), *prcount);
+		else
+			printf("时间:%d，任务TaskMA等待异常结束，错误号:%d\n", *perr);
+
+		// pmyMem = prcount;
+
+		if (*prcount == 2)
+		{
+			printf("TaskMA开始获取TaskMB写入内存的信息\n");
+
+			i = 0;
+			while (i < 2)
+			{
+				printf("时间:%d，任务TaskMB准备请求一个块->", OSTimeGet());
+				pblk[i++] = OSMemGet(pmyMem, perr); /*请求内存块*/
+				switch (err)
+				{
+				case OS_ERR_MEM_NO_FREE_BLKS:
+					printf("时间:%d，任务TaskMB发请求内存块失败，分区中已无可用内存块！\n", OSTimeGet());
+					break;
+				case OS_ERR_NONE:
+					printf("时间:%d，任务TaskMB获得内存块\n", OSTimeGet());
+					// readData = (INT8U) pblk[i];
+					readData = i;
+					printf("读取第i块内存的值：%d\n", readData);
+					break;
+				default:
+					printf("时间:%d，任务TaskMB发请求内存块失败，错误号：%d\n", OSTimeGet(), err);
+				}
+			}
+		}
+	}
+}
+
+void TaskMB(void *pParam)
+{
+
+	INT8U *perr;
+	INT8U err, i;
+	// OS_MEM *pmyMem;		//MCB块地址
+	INT8U *prcount;	   //从邮箱获取的地址
+	INT8U myMem[2][1]; //用来做内存分区
+	void *pblk[10];	   //内存块地址数组
+	BOOLEAN require;
+	OS_MEM_DATA mem_data; //用于查询内存块信息
+	err = OS_ERR_NONE;
+	perr = &err;
+	require = 1;
+
+	OSTimeDly(300); /*延时1秒*/
+
+	if (myMBox == (OS_EVENT *)0) /*检查邮箱是否存在*/
+	{
+		printf("时间:%d，任务TaskMB判定邮箱不存在!\n", OSTimeGet());
+		OSTaskDel(OS_PRIO_SELF); /*不成功则删除本任务*/
+		return;
+	}
+
+	prcount = (INT8U *)OSMboxPend(myMBox, 0, perr); /*请求消息，如果消息不存在就阻塞*/
+	if (*perr == OS_ERR_NONE)
+		printf("时间:%d，任务TaskMB接收消息为%d\n", OSTimeGet(), *prcount);
+	else
+		printf("时间:%d，任务TaskMB等待异常结束，错误号:%d\n", *perr);
+
+	// pmyMem = prcount;
+
+	if (*prcount == 1)
+	{
+		printf("TaskMB开始获取TaskMA释放的内存块\n");
+	}
+
+	i = 0;
+	while (i < 2)
+	{
+		printf("时间:%d，任务TaskMB准备请求一个块->", OSTimeGet());
+		pblk[i++] = OSMemGet(pmyMem, perr); /*请求内存块*/
+		switch (err)
+		{
+		case OS_ERR_MEM_NO_FREE_BLKS:
+			printf("时间:%d，任务TaskMB发请求内存块失败，分区中已无可用内存块！\n", OSTimeGet());
+			break;
+		case OS_ERR_NONE:
+			printf("时间:%d，任务TaskMB获得内存块\n", OSTimeGet());
+			memset(&pblk[i], 1, 8);
+			printf("pblk赋值了\n");
+			break;
+		default:
+			printf("时间:%d，任务TaskMB发请求内存块失败，错误号：%d\n", OSTimeGet(), err);
+		}
+	}
+
+	OSTimeDly(100); /*延时1秒*/
+	OSMemQuery(pmyMem, &mem_data);
+	printf("时间:%d，当前分区中的已用内存块数量：%d\n", OSTimeGet(), mem_data.OSNUsed);
+	printf("时间:%d，当前分区中的空闲内存块数量：%d\n", OSTimeGet(), mem_data.OSNFree);
+
+	OSTimeDly(100); /*延时1秒*/
+	while (i > 0)
+	{
+		printf("时间:%d，任务TaskMB准备释放一个块->", OSTimeGet());
+		err = OSMemPut(pmyMem, pblk[--i]); /*请求内存块*/
+		switch (err)
+		{
+		case OS_ERR_MEM_FULL:
+			printf("时间:%d，任务TaskMB发请求内存块失败，分区已满！\n", OSTimeGet());
+			break;
+		case OS_ERR_MEM_INVALID_PBLK:
+			printf("时间:%d，任务TaskMB发释放内存块失败，释放无效的内存块！\n", OSTimeGet());
+			break;
+		case OS_ERR_NONE:
+			printf("时间:%d，任务TaskMB成功释放内存块\n", OSTimeGet());
+			break;
+		default:
+			printf("时间:%d，任务TaskMB释放内存块失败，错误号：%d\n", OSTimeGet(), err);
+		}
+	}
+
+	OSTimeDly(100); /*延时1秒*/
+	OSMemQuery(pmyMem, &mem_data);
+	printf("时间:%d，当前分区中的已用内存块数量：%d\n", OSTimeGet(), mem_data.OSNUsed);
+	printf("时间:%d，当前分区中的空闲内存块数量：%d\n", OSTimeGet(), mem_data.OSNFree);
+
+	data = 2;
+	OSTimeDly(100);			   /*延时1秒*/
+	OSMboxPost(myMBox, &data); /*发消息*/
+
+	while (1)
+	{
+		OSTimeDly(200); /*延时1秒*/
+		printf("TaskMB 循环中，等待后续处理 \n");
+	}
+
+	// while (1)
+	// {
+	// 	if (i > 2)
+	// 	{
+	// 		i = 0;
+	// 		require = !require;
+	// 	}
+	// 	//printf("时间:%d，i=%d\n",OSTimeGet(),i);
+	// 	OSTimeDly(100); /*延时1秒*/
+	// 	if (require)
+	// 	{
+	// 		printf("时间:%d，任务TaskMB准备请求一个块->", OSTimeGet());
+	// 		pblk[i++] = OSMemGet(pmyMem, perr); /*请求内存块*/
+	// 		switch (err)
+	// 		{
+	// 		case OS_ERR_MEM_NO_FREE_BLKS:
+	// 			printf("时间:%d，任务TaskMB发请求内存块失败，分区中已无可用内存块！\n", OSTimeGet());
+	// 			break;
+	// 		case OS_ERR_NONE:
+	// 			printf("时间:%d，任务TaskMB获得内存块\n", OSTimeGet());
+	// 			memset(&pblk[i++], 0x01, 8);
+	// 			printf("pblk赋值了\n");
+	// 			break;
+	// 		default:
+	// 			printf("时间:%d，任务TaskMB发请求内存块失败，错误号：%d\n", OSTimeGet(), err);
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		printf("时间:%d，任务TaskMB准备释放一个块->", OSTimeGet());
+	// 		err = OSMemPut(pmyMem, pblk[i++]); /*请求内存块*/
+	// 		switch (err)
+	// 		{
+	// 		case OS_ERR_MEM_FULL:
+	// 			printf("时间:%d，任务TaskMB发请求内存块失败，分区已满！\n", OSTimeGet());
+	// 			break;
+	// 		case OS_ERR_MEM_INVALID_PBLK:
+	// 			printf("时间:%d，任务TaskMB发释放内存块失败，释放无效的内存块！\n", OSTimeGet());
+	// 			break;
+	// 		case OS_ERR_NONE:
+	// 			printf("时间:%d，任务TaskMB成功释放内存块\n", OSTimeGet());
+	// 			break;
+	// 		default:
+	// 			printf("时间:%d，任务TaskMB释放内存块失败，错误号：%d\n", OSTimeGet(), err);
+	// 		}
+	// 	}
+	// 	OSMemQuery(pmyMem, &mem_data);
+	// 	printf("时间:%d，当前分区中的已用内存块数量：%d\n", OSTimeGet(), mem_data.OSNUsed);
+	// 	printf("时间:%d，当前分区中的空闲内存块数量：%d\n", OSTimeGet(), mem_data.OSNFree);
+	// }
 }

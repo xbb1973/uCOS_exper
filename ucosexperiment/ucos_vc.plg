@@ -6,25 +6,13 @@
 --------------------Configuration: ucos_vc - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\RSP63BA.tmp" with contents
+Creating temporary file "C:\Users\xbb1973\AppData\Local\Temp\RSP936F.tmp" with contents
 [
 /nologo /ML /W3 /Gm /GX /ZI /I "UCOS/CPU" /I "UCOS/SOURCE" /I "user" /I "UCOS/CONFIG" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR"OUTPUT/Debug/" /Fp"OUTPUT/Debug/ucos_vc.pch" /YX /Fo"OUTPUT/Debug/" /Fd"OUTPUT/Debug/" /FD /I /GZ /c 
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\CPU\os_cpu.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_core.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_flag.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_mbox.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_mem.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_mutex.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_q.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_sem.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_task.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_time.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\UCOS\SOURCE\os_tmr.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\user\usercode.c"
-"E:\real-time system design\实验教程和代码2013\ucosexperiment\main.c"
+"\\Mac\Home\Downloads\实时系统设计\作业&实验\ucosexperiment\user\usercode.c"
 ]
-Creating command line "cl.exe @C:\Users\ADMINI~1\AppData\Local\Temp\RSP63BA.tmp" 
-Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\RSP63BB.tmp" with contents
+Creating command line "cl.exe @C:\Users\xbb1973\AppData\Local\Temp\RSP936F.tmp" 
+Creating temporary file "C:\Users\xbb1973\AppData\Local\Temp\RSP9370.tmp" with contents
 [
 kernel32.lib user32.lib winmm.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib /nologo /subsystem:console /incremental:yes /pdb:"OUTPUT/Debug/ucos_vc.pdb" /debug /machine:I386 /out:"OUTPUT/Debug/ucos_vc.exe" /pdbtype:sept 
 ".\OUTPUT\Debug\os_cpu.obj"
@@ -41,28 +29,36 @@ kernel32.lib user32.lib winmm.lib gdi32.lib winspool.lib comdlg32.lib advapi32.l
 ".\OUTPUT\Debug\usercode.obj"
 ".\OUTPUT\Debug\main.obj"
 ]
-Creating command line "link.exe @C:\Users\ADMINI~1\AppData\Local\Temp\RSP63BB.tmp"
+Creating command line "link.exe @C:\Users\xbb1973\AppData\Local\Temp\RSP9370.tmp"
 <h3>Output Window</h3>
 Compiling...
-os_cpu.c
-os_core.c
-os_flag.c
-os_mbox.c
-os_mem.c
-os_mutex.c
-os_q.c
-os_sem.c
-os_task.c
-os_time.c
-os_tmr.c
 usercode.c
-main.c
+\\Mac\Home\Downloads\实时系统设计\作业&实验\ucosexperiment\user\usercode.c(1128) : warning C4101: 'myMem' : unreferenced local variable
 Linking...
+Creating temporary file "C:\Users\xbb1973\AppData\Local\Temp\RSP9546.tmp" with contents
+[
+/nologo /o"OUTPUT/Debug/ucos_vc.bsc" 
+".\OUTPUT\Debug\os_cpu.sbr"
+".\OUTPUT\Debug\os_core.sbr"
+".\OUTPUT\Debug\os_flag.sbr"
+".\OUTPUT\Debug\os_mbox.sbr"
+".\OUTPUT\Debug\os_mem.sbr"
+".\OUTPUT\Debug\os_mutex.sbr"
+".\OUTPUT\Debug\os_q.sbr"
+".\OUTPUT\Debug\os_sem.sbr"
+".\OUTPUT\Debug\os_task.sbr"
+".\OUTPUT\Debug\os_time.sbr"
+".\OUTPUT\Debug\os_tmr.sbr"
+".\OUTPUT\Debug\usercode.sbr"
+".\OUTPUT\Debug\main.sbr"]
+Creating command line "bscmake.exe @C:\Users\xbb1973\AppData\Local\Temp\RSP9546.tmp"
+Creating browse info file...
+<h3>Output Window</h3>
 
 
 
 <h3>Results</h3>
-ucos_vc.exe - 0 error(s), 0 warning(s)
+ucos_vc.exe - 0 error(s), 1 warning(s)
 </pre>
 </body>
 </html>

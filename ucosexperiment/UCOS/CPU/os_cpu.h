@@ -118,3 +118,5 @@ extern BOOLEAN FlagEn;
 OS_CPU_SR  OSCPUSaveSR(void);
 void       OSCPURestoreSR(OS_CPU_SR cpu_sr);
 #endif
+
+void OSTaskIdleHook(void);

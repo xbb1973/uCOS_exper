@@ -31,6 +31,16 @@ void UserTaskSemB(void *pParam);
 
 void UserTaskSemC(void *pParam);
 
+void hyl6A(void *pParam);
+void hyl6B(void *pParam);
+void hyl6C(void *pParam);
+void hyl6D(void *pParam);
+void hylProcess(void *pParam);
+void hylsubProcess1(void *pParam);
+void hylsubProcess2(void *pParam);
+void TaskMA(void *pParam);
+void TaskMB(void *pParam);
+
 void TaskDataProcess(void *pParam);
 void TaskIO1(void *pParam);
 void TaskIO2(void *pParam);
